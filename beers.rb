@@ -222,8 +222,41 @@ def output_json(breweries)
   File.write('./breweries_2023.json', breweries_jsonized.to_json)
 end
 
+def output_csv(breweries)
+  csv_string = CSV.generate do |csv|
+    csv << ['Beer name', 'Beer style', 'Beer ABV', 'Brewery name', 'Island', 'Booth', 'Additional taprooms', 'Region', 'Actual location', 'Website']
+
+    breweries.each do |brewery|
+      brewery.beers.each do |beer|
+        actual_location = "#{brewery.actual_location.city}, #{brewery.actual_location.state}"
+
+        if !brewery.actual_location.country.nil?
+          actual_location += ", #{brewery.actual_location.country}"
+        end
+
+        csv << [
+          beer.name,
+          beer.style,
+          beer.abv,
+          brewery.name,
+          brewery.festival_location.island,
+          brewery.festival_location.booth,
+          brewery.festival_location.additional_taprooms.join(','),
+          brewery.actual_location.region,
+          actual_location,
+          brewery.website,
+        ]
+      end
+    end
+  end
+
+  FileUtils.rm_f('./breweries_2023.csv')
+  File.write('./breweries_2023.csv', csv_string)
+end
+
 require 'fileutils'
 require 'json'
+require 'csv'
 
 file_name = './official_website_breweries_2023.json'
 
@@ -237,3 +270,4 @@ sours = beers.select { |beer| beer.style == 'Sour Ales, Brett Beers & Lambics' }
 puts "#{sours.size} sours"
 
 output_json(breweries)
+output_csv(breweries)
